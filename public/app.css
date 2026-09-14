@@ -192,11 +192,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 @media (max-width: 700px) {
   .header { flex-wrap: wrap; row-gap: 0.55rem; }
   .nav {
-    gap: 0.9rem; order: 2; width: 100%; overflow-x: auto;
-    -webkit-overflow-scrolling: touch; padding-bottom: 0.15rem;
-    scrollbar-width: none;
+    gap: 0.6rem 0.95rem; order: 2; width: 100%; flex-wrap: wrap;
   }
-  .nav::-webkit-scrollbar { display: none; }
   .nav a { font-size: 0.8rem; white-space: nowrap; flex: 0 0 auto; }
 }
 
