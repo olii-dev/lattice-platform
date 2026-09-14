@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meet the Lattice platform | Lattice</title>
+  <meta name="description" content="A quick look at what you can do with Lattice: chat with small language models, create an API key, and start building." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../app.css" />
+  <style>
+    .blog-page main { max-width: 860px; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .post h1 { margin-bottom: 0.4rem; }
+    .post .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-muted, #c2c2cc); margin: 1.25rem 0 2rem; }
+    .post h2 { margin-top: 2.75rem; }
+    .post p { line-height: 1.7; }
+    .post ul, .post ol { line-height: 1.7; padding-left: 1.4rem; }
+    .post a { color: var(--accent); }
+    .post-meta { margin-bottom: 0.5rem; }
+    .post code { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 0.15rem 0.4rem; font-size: 0.88em; }
+    .post pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; overflow-x: auto; line-height: 1.6; font-size: 0.88rem; }
+    .post pre code { background: none; border: none; padding: 0; }
+  </style>
+  <script src="../app.js"></script>
+</head>
+<body class="blog-page">
+  <script>document.write(Lat.header());</script>
+  <main>
+    <a href="index.html" class="back-link">← Back to Blog</a>
+    <article class="post">
+      <h1>Meet the Lattice platform</h1>
+      <div class="post-meta">
+        <span class="cat">Product</span>
+        <time datetime="2026-09-14">Sep 14, 2026</time>
+      </div>
+
+      <p class="lead">Lattice is a simple place to try our small language models and use them in your own projects.</p>
+
+      <h2>Chat in your browser</h2>
+      <p>Open the chat, choose Quark or Spark, and start a conversation. Guest access lets you try it immediately, while a free account gives you higher limits and saved access to your API keys.</p>
+
+      <h2>Build with the API</h2>
+      <p>Create an API key from your dashboard and connect through an OpenAI-compatible endpoint. That means many tools can use Lattice with only a small configuration change.</p>
+
+      <h2>Follow the models</h2>
+      <p>Benchmarks, model notes and release posts stay public, so you can see what each model is good at before choosing one.</p>
+
+      <p>Try it now in <a href="../chat.html">Chat</a>, read the <a href="../docs.html">Docs</a>, or <a href="../auth%3Fmode=signup.html">create a free account</a>.</p>
+    </article>
+  <section class="section"><div class="panel" style="text-align:center;background:linear-gradient(135deg,rgba(139,92,246,.09),rgba(56,189,248,.05))"><h3 style="margin-top:0">Support Lattice</h3><p class="dim">Lattice runs on donations. If this post was useful, chip in on Ko-fi and help us train the next one.</p><a class="btn btn-primary" href="https://ko-fi.com/latticeai" target="_blank" rel="noopener">Support on Ko-fi</a></div></section></main>
+  <script>document.write(Lat.footer());</script>
+  <script>Lat.renderNav();</script>
+</body>
+</html>

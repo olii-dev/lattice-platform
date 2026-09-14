@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docs - Lattice</title>
+  <meta name="description" content="Everything about using Lattice: accounts, the chat, API keys, the OpenAI-compatible API, rate limits and errors." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="stylesheet" href="app.css" />
+  <script src="app.js"></script>
+  <style>
+    .docs-wrap { display: grid; grid-template-columns: 200px 1fr; gap: 2.5rem; max-width: 1000px; }
+    .docs-nav { position: sticky; top: 84px; align-self: start; display: flex; flex-direction: column; gap: 0.15rem; }
+    .docs-nav a { color: var(--muted); text-decoration: none; font-size: 0.85rem; padding: 0.35rem 0.7rem; border-radius: 7px; border-left: 2px solid transparent; }
+    .docs-nav a:hover { color: var(--text); background: var(--bg-elev); }
+    .docs-nav a.on { color: var(--accent); border-left-color: var(--accent); }
+    .doc h3 { margin: 2.6rem 0 0.6rem; font-size: 1.2rem; letter-spacing: -0.01em; scroll-margin-top: 90px; }
+    .doc h3:first-of-type { margin-top: 1.2rem; }
+    .doc h4 { margin: 1.6rem 0 0.4rem; font-size: 0.98rem; }
+    .doc p, .doc li { font-size: 0.93rem; color: var(--muted); }
+    .doc ul { padding-left: 1.2rem; }
+    .doc .codeblock { margin: 0.9rem 0; }
+    .doc table.tbl { margin: 0.9rem 0; }
+    .doc strong { color: var(--text); }
+    @media (max-width: 800px) { .docs-wrap { grid-template-columns: 1fr; } .docs-nav { position: static; flex-direction: row; flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+  <script>document.write(Lat.header());</script>
+  <main>
+    <h2 style="font-size:1.8rem;letter-spacing:-0.02em;margin:0 0 0.4rem">Docs</h2>
+    <p class="section-lead">Everything about using Lattice - accounts, chat, keys, and the API.</p>
+    <div class="docs-wrap">
+      <nav class="docs-nav" id="docs-nav">
+        <a href="docs.html#quickstart">Quickstart</a>
+        <a href="docs.html#accounts">Accounts</a>
+        <a href="docs.html#chat">Web chat</a>
+        <a href="docs.html#keys">API keys</a>
+        <a href="docs.html#api">API reference</a>
+        <a href="docs.html#sdks">SDKs &amp; tools</a>
+        <a href="docs.html#limits">Rate limits</a>
+        <a href="docs.html#errors">Errors</a>
+        <a href="docs.html#models">Models</a>
+        <a href="docs.html#privacy">Data &amp; privacy</a>
+      </nav>
+      <div class="doc">
+        <h3 id="quickstart">Quickstart</h3>
+        <p>Fastest path from zero to a model reply:</p>
+        <ul>
+          <li><strong>Just chat:</strong> open <a href="chat.html" style="color:var(--accent)">/chat</a> and type. Guests get 10 messages/hour.</li>
+          <li><strong>Account:</strong> <a href="auth.html" style="color:var(--accent)">sign up</a> with your email, enter the 6-digit code we send you.</li>
+          <li><strong>API key:</strong> dashboard → New key → copy it (shown once) → call <span class="mono">POST /v1/chat/completions</span>.</li>
+        </ul>
+        <div class="codeblock"><button class="copy-btn" onclick="Lat.toast('copied');navigator.clipboard.writeText(this.nextElementSibling.innerText)">copy</button><pre style="margin:0;white-space:pre-wrap">
+  -H "Authorization: Bearer lq_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"lattice-quark-1.5b","messages":[{"role":"user","content":"Hello!"}]}'</pre></div>
+
+        <h3 id="accounts">Accounts</h3>
+        <p>Sign up with an email and a password (8+ characters). We email you a 6-digit verification code - it expires in 15 minutes and you get 5 tries. Ask for a new one any time from the auth page or the dashboard banner. API key creation requires a verified email; everything else works unverified.</p>
+        <p>Accounts are free. There's no paid tier and no plan to add one.</p>
+
+        <h3 id="chat">Web chat</h3>
+        <p>The <a href="chat.html" style="color:var(--accent)">chat</a> talks to both models - switch between Quark and Spark in the top bar, any time, even mid-conversation. Chats are stored in your browser's local storage (nothing leaves your device for history), and you can run multiple conversations from the sidebar.</p>
+        <ul>
+          <li><strong>Guests:</strong> 2 messages/minute, 10/hour per IP.</li>
+          <li><strong>Signed in:</strong> soft per-minute limits, generous for normal use.</li>
+        </ul>
+        <p>If a reply takes a while after the site's been idle, the models are warming back up on the GPU - the first request can take a minute, then it's fast.</p>
+
+        <h3 id="keys">API keys</h3>
+        <p>Create up to 5 active keys in the <a href="dashboard.html" style="color:var(--accent)">dashboard</a>. Give each a name ("opencode", "my-bot") so you know what to revoke later. Keys:</p>
+        <ul>
+          <li>start with <span class="mono">lq_</span>, shown exactly once - save it immediately;</li>
+          <li>are stored hashed, so we can't recover a lost key (just make a new one);</li>
+          <li>can be revoked instantly from the dashboard;</li>
+          <li>share your account's rate limits (50/min, 1,000/day) - usage is tracked per key.</li>
+        </ul>
+        <p>The dashboard also shows your usage: requests per day, characters generated, per-key breakdown, last 30 days.</p>
+
+        <h3 id="api">API reference</h3>
+        <h4>Base URL + auth</h4>
+        <div class="codeblock"><pre style="margin:0;white-space:pre-wrap">https://lattice.mebbo.cloud/v1
+Authorization: Bearer lq_your_key</pre></div>
+        <h4><span class="mono">GET /v1/models</span></h4>
+        <p>Lists the available models. Auth required.</p>
+        <h4><span class="mono">POST /v1/chat/completions</span></h4>
+        <p>OpenAI-compatible. Body: <span class="mono">model</span>, <span class="mono">messages</span> (array of <span class="mono">{role, content}</span> - system messages are honored). Optional: <span class="mono">stream</span>.</p>
+        <div class="codeblock"><button class="copy-btn" onclick="Lat.toast('copied');navigator.clipboard.writeText(this.nextElementSibling.innerText)">copy</button><pre style="margin:0;white-space:pre-wrap">{
+  "model": "lattice-quark-1.5b",
+  "messages": [
+    {"role": "system", "content": "You are concise."},
+    {"role": "user", "content": "Hello!"}
+  ]
+}</pre></div>
+        <p>Response: standard <span class="mono">chat.completion</span> JSON with <span class="mono">choices[0].message.content</span>. <span class="mono">stream: true</span> returns the full reply as a single SSE chunk - real token streaming isn't supported by the backend yet.</p>
+        <h4>Notes</h4>
+        <ul>
+          <li>Conversation history is trimmed to the last few turns server-side (2048-token context window).</li>
+          <li>CORS is open, so browser apps can call the API directly (mind your key exposure).</li>
+          <li>Cold starts: after idle, the first call reloads the models - up to a minute or two. Retry and it's fast.</li>
+        </ul>
+
+        <h3 id="sdks">SDKs &amp; tools</h3>
+        <h4>Python (OpenAI SDK)</h4>
+        <div class="codeblock"><button class="copy-btn" onclick="Lat.toast('copied');navigator.clipboard.writeText(this.nextElementSibling.innerText)">copy</button><pre style="margin:0;white-space:pre-wrap">from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://lattice.mebbo.cloud/v1",
+    api_key="lq_your_key",
+)
+
+r = client.chat.completions.create(
+    model="lattice-quark-1.5b",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(r.choices[0].message.content)</pre></div>
+        <h4>opencode / Cline / any OpenAI-compatible client</h4>
+        <p>Set the base URL to <span class="mono">https://lattice.mebbo.cloud/v1</span>, the API key to your <span class="mono">lq_</span> key, and the model to <span class="mono">lattice-quark-1.5b</span> or <span class="mono">lattice-spark-1.5b</span>.</p>
+
+        <h3 id="limits">Rate limits</h3>
+        <div class="table-scroll"><table class="tbl">
+          <thead><tr><th>Scope</th><th>Limit</th></tr></thead>
+          <tbody>
+            <tr><td>API keys</td><td class="dim">50 requests/minute · 1,000 requests/day (per account, shared across your keys - 5 active keys max)</td></tr>
+            <tr><td>Signed-in web chat</td><td class="dim">soft per-minute limits</td></tr>
+            <tr><td>Guest web chat</td><td class="dim">2 messages/minute · 10/hour per IP</td></tr>
+          </tbody>
+        </table></div>
+        <p>Over a limit → HTTP 429 with a plain-English message. One shared GPU serves everyone - the limits keep it fair.</p>
+
+        <h3 id="errors">Errors</h3>
+        <p>The API uses the OpenAI error shape: <span class="mono">{"error": {"message": "...", "type": "..."}}</span>.</p>
+        <div class="table-scroll"><table class="tbl">
+          <thead><tr><th>Type</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">auth_error</td><td class="dim">Missing, wrong, or revoked key</td></tr>
+            <tr><td class="mono">rate_limit_error</td><td class="dim">Minute or daily limit hit - back off</td></tr>
+            <tr><td class="mono">invalid_request_error</td><td class="dim">Bad JSON, no messages, unknown model</td></tr>
+            <tr><td class="mono">upstream_error</td><td class="dim">Model warming or unreachable - retry in a few seconds</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 id="models">Models</h3>
+        <div class="table-scroll"><table class="tbl">
+          <thead><tr><th>ID</th><th>What it is</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">lattice-quark-1.5b</td><td class="dim">1.5B pretrained + instruction tuned from scratch. <a href="benchmarks/quark.html" style="color:var(--accent)">Benchmarks</a> · <a href="https://huggingface.co/lattice-research/lattice-quark-1.5b" target="_blank" rel="noopener" style="color:var(--accent)">Weights</a></td></tr>
+            <tr><td class="mono">lattice-spark-1.5b</td><td class="dim">Qwen2.5-1.5B identity fine-tune. <a href="benchmarks/spark.html" style="color:var(--accent)">Benchmarks</a> · <a href="https://huggingface.co/lattice-research/lattice-spark-1.5b" target="_blank" rel="noopener" style="color:var(--accent)">Weights</a></td></tr>
+          </tbody>
+        </table></div>
+        <p>These are 1.5B models. They will make things up confidently. Don't use them where factual accuracy matters - check the <a href="benchmarks/index.html" style="color:var(--accent)">benchmarks</a> for honest numbers.</p>
+
+        <h3 id="privacy">Data &amp; privacy</h3>
+        <ul>
+          <li>We store your email, hashed password, hashed API keys, and aggregate usage (counts, latency, model) for the dashboard and abuse controls.</li>
+          <li>Web chat history lives in your browser, not on our servers.</li>
+          <li>Guest chats are rate-limited by IP and not tied to an identity.</li>
+          <li>Don't paste secrets into prompts - treat Lattice like any public model.</li>
+          <li>Abuse gets keys revoked and accounts banned.</li>
+        </ul>
+        <p>Questions: <a href="faq.html" style="color:var(--accent)">FAQ</a> · <a href="contact.html" style="color:var(--accent)">Contact</a>.</p>
+      </div>
+    </div>
+  </main>
+  <script>document.write(Lat.footer());</script>
+  <script>
+    Lat.renderNav();
+    const links = [...document.querySelectorAll("#docs-nav a")];
+    const heads = links.map(a => document.querySelector(a.hash));
+    const obs = new IntersectionObserver((es) => {
+      es.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(a => a.classList.toggle("on", a.hash === "#" + e.target.id));
+        }
+      });
+    }, { rootMargin: "-80px 0px -70% 0px" });
+    heads.forEach(h => h && obs.observe(h));
+  </script>
+</body>
+</html>

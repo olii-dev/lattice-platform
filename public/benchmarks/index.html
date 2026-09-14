@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmarks — Lattice</title>
+  <meta name="description" content="Benchmark results for Lattice Spark, Quark, Mini, Pulse, and Pulse 2 — honest numbers, including what each model does and doesn't change." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../app.css" />
+  <style>
+    .bench-page main { max-width: 980px; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .section-lead { margin-bottom: 2rem; max-width: 70ch; }
+    .bench-compare {
+      width: 100%;
+      margin: 1.75rem 0 2rem;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .bench-compare th, .bench-compare td {
+      text-align: left;
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .bench-compare th {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted, #9a9aa8);
+      font-weight: 600;
+    }
+    .bench-compare td:first-child { font-weight: 600; white-space: nowrap; }
+    .bench-compare tr:last-child td { border-bottom: none; }
+    .bench-compare a { color: var(--accent); text-decoration: none; }
+    .bench-compare a:hover { text-decoration: underline; }
+    .model-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; }
+    .model-link {
+      display: flex; flex-direction: column; gap: 0.25rem;
+      padding: 1rem 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: border-color 0.15s ease;
+    }
+    .model-link:hover { border-color: var(--accent); }
+    .model-link strong { color: var(--text); }
+    .model-link span { font-size: 0.82rem; color: var(--text-muted, #9a9aa8); }
+    .retired {
+      margin-top: 2.5rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      padding: 0 1.25rem 1.25rem;
+    }
+    .retired summary {
+      cursor: pointer;
+      padding: 1rem 0;
+      font-size: 0.85rem;
+      color: var(--text-muted, #9a9aa8);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      user-select: none;
+    }
+    .retired summary:hover { color: var(--text); }
+    .retired .bench-compare { margin-top: 0; }
+  </style>
+  <script src="../app.js"></script>
+</head>
+<body class="bench-page">
+  <script>document.write(Lat.header());</script>
+<main>
+    <a href="../index.html" class="back-link">← Back to Lattice</a>
+    <h1>Benchmarks</h1>
+
+    <h2 style="font-size: 1.15rem; margin-top: 0.5rem;">At a glance</h2>
+    <table class="bench-compare">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Recipe</th>
+          <th>Identity</th>
+          <th>Knowledge</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="spark.html">Spark</a></td>
+          <td>1.5B MLX LoRA (rank 8)</td>
+          <td>8/8 in weights</td>
+          <td>8/8 factual</td>
+          <td>Identity genuinely learned, knowledge intact</td>
+        </tr>
+        <tr>
+          <td><a href="quark.html">Quark</a></td>
+          <td>1.5B from scratch + SFT</td>
+          <td>5/8 partially learned</td>
+          <td>4/8, thin data</td>
+          <td>The real from-scratch effort: 35.8% HellaSwag, beats GPT-2 124M</td>
+        </tr>
+        <tr>
+          <td><a href="mini.html">Mini</a></td>
+          <td>42M from scratch</td>
+          <td>—</td>
+          <td>Expect wrong answers</td>
+          <td>Pipeline proof, not a product</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="model-links">
+      <a class="model-link" href="quark.html">
+        <strong>Quark benchmarks</strong>
+        <span>1.5B trained from scratch.</span>
+      </a>
+      <a class="model-link" href="spark.html">
+        <strong>Spark benchmarks</strong>
+        <span>Identity in the weights.</span>
+      </a>
+      <a class="model-link" href="mini.html">
+        <strong>Mini benchmarks</strong>
+        <span>42M from scratch.</span>
+      </a>
+    </div>
+
+    <details class="retired">
+      <summary>Retired — Pulse &amp; Pulse 2</summary>
+      <table class="bench-compare">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Recipe</th>
+            <th>Identity</th>
+            <th>Knowledge</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="pulse.html">Pulse</a></td>
+            <td>1.5B fine-tune</td>
+            <td>0/8 without system prompt</td>
+            <td>8/8 factual</td>
+            <td>Identity came from the system prompt — superseded by Spark</td>
+          </tr>
+          <tr>
+            <td><a href="pulse2.html">Pulse 2</a></td>
+            <td>8B QLoRA (rank 16)</td>
+            <td>0% without system prompt</td>
+            <td>100% factual accuracy retained</td>
+            <td>Fine-tune was inert; branding came from the prompt</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="model-links">
+        <a class="model-link" href="pulse.html">
+          <strong>Pulse benchmarks</strong>
+          <span>Industry suites + custom identity/factual/multi-turn eval — the lesson that built Spark</span>
+        </a>
+        <a class="model-link" href="pulse2.html">
+          <strong>Pulse 2 benchmarks</strong>
+          <span>8B QLoRA vs base Qwen3-8B — the fine-tune that changed nothing</span>
+        </a>
+      </div>
+    </details>
+  </main>
+
+  <footer class="footer">
+    <p>Built by <a href="https://oli.mebberson.com" target="_blank" rel="noopener">Oli Mebberson</a> · Open weights on Hugging Face</p>
+  </footer>
+  <script>Lat.renderNav();</script>
+</body>
+</html>

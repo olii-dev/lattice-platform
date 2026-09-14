@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog — Lattice</title>
+  <meta name="description" content="Lattice research notes — model comparisons, training runs, and release writeups for Mini, Pulse, Spark, and Quark." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../app.css" />
+  <style>
+    .blog-page main { max-width: 860px; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .section-lead { margin-bottom: 2rem; max-width: 70ch; }
+    .posts { display: flex; flex-direction: column; gap: 1rem; }
+    .post-card {
+      display: flex; flex-direction: column; gap: 0.4rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: border-color 0.15s ease;
+    }
+    .post-card:hover { border-color: var(--accent); }
+    .post-meta {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-muted, #9a9aa8);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .post-meta .cat { color: var(--accent); }
+    .post-card h2 { font-size: 1.15rem; margin: 0; color: var(--text); }
+    .post-card p { margin: 0; font-size: 0.92rem; line-height: 1.55; color: var(--text-muted, #c2c2cc); }
+  </style>
+  <script src="../app.js"></script>
+</head>
+<body class="blog-page">
+  <script>document.write(Lat.header());</script>
+<main>
+    <a href="../index.html" class="back-link">← Back to Lattice</a>
+    <h1>Blog</h1>
+    <p class="section-lead">
+      Research notes from the Lattice project.
+    </p>
+
+    <div class="posts">
+      <a class="post-card" href="how-the-site-works.html">
+        <div class="post-meta">
+          <span class="cat">Engineering</span>
+          <time datetime="2026-09-14">Sep 14, 2026</time>
+        </div>
+        <h2>How lattice.mebbo.cloud actually works</h2>
+        <p>A Cloudflare Worker, a D1 database, and one Azure T4. The full plumbing tour, what it costs ($0), and the bug that ate the launch.</p>
+      </a>
+      <a class="post-card" href="platform.html">
+        <div class="post-meta">
+          <span class="cat">Releases</span>
+          <time datetime="2026-09-14">Sep 14, 2026</time>
+        </div>
+        <h2>Lattice is a platform now</h2>
+        <p>A proper home at lattice.mebbo.cloud: real accounts, self-serve API keys, an OpenAI-compatible API, and a chat anyone can use - no account needed.</p>
+      </a>
+      <a class="post-card" href="quark-mlx.html">
+        <div class="post-meta">
+          <span class="cat">Releases</span>
+          <time datetime="2026-08-19">Aug 19, 2026</time>
+        </div>
+        <h2>Quark on your Mac: the MLX build is here</h2>
+        <p>A 1.7GB 4-bit MLX build of Quark, running fully on-device at ~100 tokens a second on Apple Silicon. How the conversion worked, and how to run it yourself.</p>
+      </a>
+      <a class="post-card" href="quark.html">
+        <div class="post-meta">
+          <span class="cat">Training runs</span>
+          <time datetime="2026-08-12">Aug 12, 2026</time>
+        </div>
+        <h2>Quark: a 1.5B model built from nothing</h2>
+        <p>No Qwen under the hood. Custom tokenizer, custom architecture, ~2B pretraining tokens, then instruction tuning. The honest writeup of what from scratch training at 1.5B looks like.</p>
+      </a>
+      <a class="post-card" href="pulse-vs-spark.html">
+        <div class="post-meta">
+          <span class="cat">Comparisons</span>
+          <time datetime="2026-08-10">Aug 10, 2026</time>
+        </div>
+        <h2>Pulse vs Spark: identity in the weights, or in a system prompt?</h2>
+        <p>Both are Qwen2.5-1.5B fine tunes. One knows it's Lattice only when told; the other has it baked in. Same knowledge, different honesty.</p>
+      </a>
+      <a class="post-card" href="lattice-mini.html">
+        <div class="post-meta">
+          <span class="cat">Training runs</span>
+          <time datetime="2026-08-10">Aug 10, 2026</time>
+        </div>
+        <h2>Lattice Mini: a 42M model built from scratch</h2>
+        <p>Most small models are stamps on someone else's pretrained brain. Mini is the other kind, custom tokenizer, pretraining, and tuning, all from nothing.</p>
+      </a>
+    </div>
+  <section class="section"><div class="panel" style="text-align:center;background:linear-gradient(135deg,rgba(139,92,246,.09),rgba(56,189,248,.05))"><h3 style="margin-top:0">Support Lattice</h3><p class="dim">Lattice runs on donations. If this post was useful, chip in on Ko-fi and help us train the next one.</p><a class="btn btn-primary" href="https://ko-fi.com/latticeai" target="_blank" rel="noopener">Support on Ko-fi</a></div></section></main>
+
+  <footer class="footer">
+    <p>Built by <a href="https://oli.mebberson.com" target="_blank" rel="noopener">Oli Mebberson</a> · Open weights on Hugging Face</p>
+  </footer>
+  <script>Lat.renderNav();</script>
+</body>
+</html>

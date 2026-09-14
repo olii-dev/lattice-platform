@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lattice - small open language models</title>
+  <meta name="description" content="Lattice builds small open language models in public - Quark, trained from scratch, and Spark. Chat with them free, or plug them into your own tools." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="stylesheet" href="app.css" />
+  <script src="app.js"></script>
+</head>
+<body>
+  <script>document.write(Lat.header());</script>
+  <main>
+    <section class="hero">
+      <h1>Small models.<br />Built in public.</h1>
+      <p class="lead">
+        Lattice is a research project building language models trained in the open -
+        every checkpoint, eval and mistake shipped where you can see it. Chat with the
+        models free, or grab a key and wire them into your own tools.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="chat.html">Chat now</a>
+        <a class="btn btn-ghost" href="docs.html">API docs</a>
+        <span class="pill" id="status-pill"><span class="dot"></span><span id="status-text">checking…</span></span>
+      </div>
+    </section>
+
+    <section class="section" id="models">
+      <h2>The models</h2>
+      <div class="grid cols-2">
+        <article class="card card-featured">
+          <span class="badge badge-accent">From scratch</span>
+          <h3>Lattice Quark</h3>
+          <p class="dim">1.5B params</p>
+          <p>Pretrained and instruction tuned entirely from scratch. No Qwen, no LLaMA weights - the flagship experiment.</p>
+          <div>
+            <a class="btn btn-primary btn-sm" href="chat%3Fmodel=quark.html">Chat</a>
+            <a class="btn btn-ghost btn-sm" href="benchmarks/quark.html">Benchmarks</a>
+            <a class="btn btn-ghost btn-sm" href="https://huggingface.co/lattice-research/lattice-quark-1.5b" target="_blank" rel="noopener">Weights</a>
+          </div>
+        </article>
+        <article class="card">
+          <span class="badge">Fine-tuned</span>
+          <h3>Lattice Spark</h3>
+          <p class="dim">1.5B params</p>
+          <p>Qwen2.5-1.5B with an identity fine-tune. Steadier on everyday questions.</p>
+          <div>
+            <a class="btn btn-primary btn-sm" href="chat%3Fmodel=spark.html">Chat</a>
+            <a class="btn btn-ghost btn-sm" href="benchmarks/spark.html">Benchmarks</a>
+            <a class="btn btn-ghost btn-sm" href="https://huggingface.co/lattice-research/lattice-spark-1.5b" target="_blank" rel="noopener">Weights</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="support">
+      <div class="support-card">
+        <h3 style="margin-top:0">Keep the free models free</h3>
+        <p class="dim" style="max-width:56ch;margin:0 auto 1rem">Lattice is free, and it's staying that way. Quark is a small model trained from scratch, and Spark is a fine-tune built on Qwen 2.5 - both released fully open, no subscriptions, no paywalled features. The GPUs that run them aren't free though. If you get something useful out of Lattice, a few dollars on Ko-fi genuinely helps keep the free models free - and helps train whatever comes next. No pressure though - there's no need to donate. Free means free either way.</p>
+        <a class="btn btn-primary" href="https://ko-fi.com/latticeai" target="_blank" rel="noopener">Support on Ko-fi</a>
+      </div>
+    </section>
+
+  </main>
+  <script>document.write(Lat.footer());</script>
+  <script>
+    Lat.renderNav();
+    const statusCtl = new AbortController();
+    const statusTimer = setTimeout(() => statusCtl.abort(), 10000);
+    fetch("/api/status", { signal: statusCtl.signal }).then(r => r.json()).then(s => {
+      const pill = document.getElementById("status-pill");
+      const txt = document.getElementById("status-text");
+      if (s.ok) { pill.classList.add("online"); txt.textContent = "models online"; }
+      else { pill.classList.add("offline"); txt.textContent = "models warming up"; }
+    }).catch(() => {
+      const pill = document.getElementById("status-pill");
+      pill.classList.add("offline");
+      document.getElementById("status-text").textContent = "status unknown";
+    }).finally(() => clearTimeout(statusTimer));
+  </script>
+</body>
+</html>

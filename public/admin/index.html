@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Lattice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="stylesheet" href="/app.css" />
+  <script src="/app.js"></script>
+  <style>
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+    .panel h4 { margin: 0 0 1rem; font-size: 0.95rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+    .drawer {
+      position: fixed; inset: 0 0 0 auto; width: min(560px, 100vw); background: var(--bg);
+      border-left: 1px solid var(--border); z-index: 60; overflow-y: auto; padding: 1.5rem;
+      transform: translateX(100%); transition: transform 0.2s;
+    }
+    .drawer.open { transform: translateX(0); }
+  
+    .admin-hero{padding:1.2rem 1.35rem;border:1px solid rgba(139,92,246,.24);border-radius:18px;background:radial-gradient(circle at 85% 10%,rgba(56,189,248,.12),transparent 35%),linear-gradient(135deg,rgba(139,92,246,.12),rgba(13,13,21,.2));display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}.admin-eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:#a78bfa;font-weight:700}.admin-controls{display:flex;gap:.5rem;flex-wrap:wrap}.top-users{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}.user-card{padding:.85rem 1rem;border:1px solid var(--border);border-radius:12px;cursor:pointer;background:rgba(255,255,255,.015)}.user-card:hover{transform:translateY(-2px);border-color:#6366f1}.user-card .rank{font-size:.7rem;color:var(--muted)}.user-card .user-metrics{display:flex;gap:1rem;margin-top:.45rem;font-size:.75rem;color:var(--muted)}.model-chip.active{box-shadow:0 0 0 2px rgba(139,92,246,.25)}
+    @media(max-width:720px){.top-users{grid-template-columns:1fr}.admin-hero{padding:1rem}.drawer{padding:1rem}.stat-grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <script>document.write(Lat.header());</script>
+  <main>
+    <section class="admin-hero" style="margin-top:1rem"><div><div class="admin-eyebrow">Lattice control room</div><h2 style="font-size:1.8rem;letter-spacing:-.04em;margin:.25rem 0">Admin analytics</h2><p class="dim" style="margin:0">Requests, estimated tokens and users across the platform.</p></div><div><div class="admin-controls" id="model-picker"><button class="btn btn-sm btn-primary model-chip active" data-model="all">All models</button><button class="btn btn-sm btn-ghost model-chip" data-model="quark">Quark</button><button class="btn btn-sm btn-ghost model-chip" data-model="spark">Spark</button></div><div class="admin-controls" id="range-picker" style="margin-top:.5rem;justify-content:flex-end"><button class="btn btn-sm btn-ghost" data-range="7d">7 days</button><button class="btn btn-sm btn-primary" data-range="30d">30 days</button><button class="btn btn-sm btn-ghost" data-range="all">All time</button></div></div></section>
+
+    <section class="section" style="margin-top:1.5rem">
+      <div class="stat-grid" id="totals"></div>
+    </section>
+
+    <section class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem">
+        <h3 style="margin:0;font-size:1.1rem">Activity - last 30 days</h3>
+        <div style="display:flex;gap:0.4rem" id="metric-picker">
+          <button class="btn btn-sm btn-primary" data-metric="requests">Requests</button>
+          <button class="btn btn-sm btn-ghost" data-metric="tokens">Tokens</button>
+        </div>
+      </div>
+      <div class="panel"><div id="chart"></div></div>
+    </section>
+
+    <section class="section">
+      <h3 style="margin:0 0 1rem;font-size:1.1rem">Signups - last 30 days</h3>
+      <div class="panel"><div id="signups-chart"></div></div>
+    </section>
+
+    <section class="section two-col">
+      <div class="panel">
+        <h4>Requests by model <span class="dim" style="font-weight:400">· all time</span></h4>
+        <div id="model-split"></div>
+      </div>
+      <div class="panel">
+        <h4>Guest vs signed-in <span class="dim" style="font-weight:400">· all time</span></h4>
+        <div id="source-split"></div>
+      </div>
+    </section>
+
+    <section class="section"><div class="toolbar"><div><h3 style="margin:0">Top users</h3><p class="dim" style="margin:.25rem 0 0;font-size:.8rem">Click a user for model and source breakdowns.</p></div></div><div id="top-users" class="top-users" style="margin-top:1rem"></div></section>
+
+    <section class="section">
+      <h3 style="margin:0 0 1rem;font-size:1.1rem">All accounts</h3>
+      <div class="panel" style="padding:0.5rem 1rem">
+        <div class="table-scroll"><table class="tbl">
+          <thead><tr><th>User</th><th>Keys</th><th>30d reqs</th><th>30d tokens</th><th>Total</th><th>Last active</th><th>Status</th></tr></thead>
+          <tbody id="users-body"><tr><td colspan="7" class="dim">Loading…</td></tr></tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="drawer" id="drawer"></div>
+  <div class="backdrop" id="backdrop" hidden style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:55"></div>
+
+  <script>document.write(Lat.footer());</script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let metric = "requests";
+    let overview = null;
+    let modelFilter = "all";
+    let adminRange = "30d";
+
+    function renderOverview() {
+      if (!overview) return;
+      const { totals, series, signups, by_model, by_source, top_users } = overview;
+      $("totals").innerHTML = [
+        [totals.users, "users"],
+        [totals.active_7d, "active · 7d"],
+        [totals.keys_active, "active keys"],
+        [totals.requests_today, "requests today"],
+        [totals.requests_total, "requests all time"],
+        [totals.tokens_total, "tokens · selected"],
+        [totals.errors, "errors · selected"],
+      ].map(([n, l]) => `<div class="stat"><div class="num">${Lat.fmtNum(n)}</div><div class="lbl">${l}</div></div>`).join("");
+      const rows = (series || []).map((d) => ({ ...d, tokens: (d.prompt_tokens || 0) + (d.completion_tokens || 0) }));
+      Lat.barChart($("chart"), rows, { buckets: 30, valueKey: metric === "tokens" ? "tokens" : "requests", label: metric });
+      Lat.barChart($("signups-chart"), (signups || []).map((d) => ({ day: d.day, requests: d.signups })), { buckets: 30, color: "#34d399", label: "signups" });
+      const modelColors = { quark: "#8b5cf6", spark: "#38bdf8" };
+      Lat.splitBars($("model-split"), (by_model || []).map((m) => ({
+        name: m.model === "quark" ? "Quark" : m.model === "spark" ? "Spark" : m.model,
+        value: metric === "tokens" ? m.tokens : m.requests,
+        color: modelColors[m.model] || "#6366f1"
+      })), { unit: metric === "tokens" ? " tokens" : " requests" });
+      const sourceMeta = { guest: ["Guests", "#fbbf24"], web: ["Signed-in chat", "#34d399"], api: ["API", "#6366f1"] };
+      Lat.splitBars($("source-split"), (by_source || []).map((s) => ({
+        name: (sourceMeta[s.source] || [s.source])[0],
+        value: metric === "tokens" ? s.tokens : s.requests,
+        color: (sourceMeta[s.source] || [, "#8b8b9e"])[1]
+      })), { unit: metric === "tokens" ? " tokens" : " requests" });
+      $("top-users").innerHTML = (top_users || []).map((u,i) => `<div class="user-card" data-user="${u.id}"><div class="rank">#${i+1}</div><strong>${Lat.esc(u.username || "Guest")}</strong><div class="dim" style="font-size:.75rem;overflow:hidden;text-overflow:ellipsis">${Lat.esc(u.email || "")}</div><div class="user-metrics"><span>${Lat.fmtNum(u.requests)} requests</span><span>${Lat.fmtNum(u.tokens)} tokens</span></div></div>`).join("") || '<p class="dim">No usage yet.</p>';
+      $("top-users").querySelectorAll('[data-user]').forEach(c => { if(c.dataset.user !== 'guest') c.onclick=()=>openUser(c.dataset.user); });
+    }
+
+    async function loadOverview() {
+      overview = await Lat.api(`/api/admin/overview?model=${modelFilter}&range=${adminRange}`);
+      renderOverview();
+    }
+
+
+    document.querySelectorAll("[data-model]").forEach(b => b.onclick = () => { modelFilter=b.dataset.model; document.querySelectorAll("[data-model]").forEach(x=>x.className="btn btn-sm model-chip "+(x===b?"btn-primary active":"btn-ghost")); loadOverview(); });
+    document.querySelectorAll("[data-range]").forEach(b => b.onclick = () => { adminRange=b.dataset.range; document.querySelectorAll("[data-range]").forEach(x=>x.className="btn btn-sm "+(x===b?"btn-primary":"btn-ghost")); loadOverview(); });
+    $("metric-picker").querySelectorAll("[data-metric]").forEach((b) => b.onclick = () => {
+      metric = b.dataset.metric;
+      $("metric-picker").querySelectorAll("[data-metric]").forEach((x) =>
+        x.className = "btn btn-sm " + (x.dataset.metric === metric ? "btn-primary" : "btn-ghost"));
+      renderOverview();
+    });
+
+    async function loadUsers() {
+      const { users } = await Lat.api("/api/admin/users");
+      $("users-body").innerHTML = users.map((u) => `
+        <tr class="clickable" data-user="${u.id}">
+          <td><strong>${Lat.esc(u.username)}</strong> <span class="dim">${Lat.esc(u.email)}</span></td>
+          <td>${u.active_keys}</td>
+          <td>${Lat.fmtNum(u.requests_30d)}</td>
+          <td>${Lat.fmtNum(u.tokens_30d || 0)}</td>
+          <td>${Lat.fmtNum(u.requests_total)}</td>
+          <td class="dim">${Lat.fmtTime(u.last_active_at)}</td>
+          <td>${u.is_admin ? '<span class="badge badge-accent">admin</span>' : u.banned_at ? '<span class="badge badge-bad">banned</span>' : '<span class="badge badge-good">active</span>'}</td>
+        </tr>`).join("") || `<tr><td colspan="7" class="dim">No users yet.</td></tr>`;
+      document.querySelectorAll("[data-user]").forEach((r) => r.onclick = () => openUser(r.dataset.user));
+    }
+
+    async function openUser(id) {
+      const d = await Lat.api(`/api/admin/users/${id}`);
+      const u = d.user;
+      const reqs30 = (d.daily || []).reduce((a, x) => a + x.requests, 0);
+      const toks30 = (d.daily || []).reduce((a, x) => a + (x.prompt_tokens || 0) + (x.completion_tokens || 0), 0);
+      const dr = $("drawer");
+      dr.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <h3 style="margin:0">${Lat.esc(u.username)}</h3>
+          <button class="btn btn-ghost btn-sm" id="drawer-close">Close</button>
+        </div>
+        <p class="dim" style="font-size:0.85rem;margin:0 0 1rem">${Lat.esc(u.email)} · joined ${Lat.fmtTime(u.created_at)} · last active ${Lat.fmtTime(u.last_active_at)}</p>
+        <div style="display:flex;gap:0.6rem;margin-bottom:1.25rem">
+          ${u.is_admin ? '<span class="badge badge-accent">admin</span>' : u.banned_at
+            ? `<button class="btn btn-ghost btn-sm" id="ban-btn">Unban</button>`
+            : `<button class="btn btn-danger btn-sm" id="ban-btn">Ban user</button>`}
+        </div>
+        <div class="stat-grid" style="margin-bottom:1.25rem">
+          <div class="stat"><div class="num">${Lat.fmtNum(reqs30)}</div><div class="lbl">requests · 30d</div></div>
+          <div class="stat"><div class="num">${Lat.fmtNum(toks30)}</div><div class="lbl">tokens · 30d</div></div>
+          <div class="stat"><div class="num">${d.keys.filter((k) => !k.revoked_at).length}</div><div class="lbl">active keys</div></div>
+        </div>
+        <div class="panel" style="margin-bottom:1.25rem"><h4>Daily activity</h4><div id="drawer-chart"></div></div><div class="two-col" style="margin-bottom:1.25rem"><div class="panel"><h4>By model</h4><div id="drawer-models"></div></div><div class="panel"><h4>By source</h4><div id="drawer-sources"></div></div></div>
+        <h4 style="margin:0 0 0.75rem;font-size:0.95rem">Keys</h4>
+        ${d.keys.length ? d.keys.map((k) => `
+          <div class="card" style="padding:0.8rem 1rem;margin-bottom:0.6rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem">
+            <div>
+              <div style="font-size:0.9rem"><strong>${Lat.esc(k.name)}</strong> <span class="mono dim">${Lat.esc(k.prefix)}…</span></div>
+              <div class="dim" style="font-size:0.75rem">created ${Lat.fmtTime(k.created_at)} · last used ${Lat.fmtTime(k.last_used_at)}</div>
+            </div>
+            ${k.revoked_at ? '<span class="badge badge-bad">revoked</span>' : `<button class="btn btn-danger btn-sm" data-revoke="${k.id}">Revoke</button>`}
+          </div>`).join("") : '<p class="dim" style="font-size:0.85rem">No keys.</p>'}
+      `;
+      Lat.barChart(dr.querySelector("#drawer-chart"), d.daily, { buckets: 30, label: "requests" });
+      const sumDim = key => Object.values((d.dimensions||[]).reduce((a,x)=>{const n=x[key]||"unknown";a[n]=(a[n]||0)+(x.prompt_tokens||0)+(x.completion_tokens||0);return a},{})).reduce((a,n)=>a+n,0);
+      const dimBars = key => Object.entries((d.dimensions||[]).reduce((a,x)=>{const n=x[key]||"unknown";a[n]=(a[n]||0)+(x.prompt_tokens||0)+(x.completion_tokens||0);return a},{})).map(([name,value],i)=>({name,value,color:["#8b5cf6","#38bdf8","#34d399","#fbbf24"][i%4]}));
+      Lat.splitBars(dr.querySelector("#drawer-models"), dimBars("model"), {unit:" tokens"}); Lat.splitBars(dr.querySelector("#drawer-sources"), dimBars("source"), {unit:" tokens"});
+      dr.querySelector("#drawer-close").onclick = closeDrawer;
+      const banBtn = dr.querySelector("#ban-btn");
+      if (banBtn) banBtn.onclick = async () => {
+        await Lat.api(`/api/admin/users/${id}/ban`, { method: "POST", body: { banned: !u.banned_at } });
+        Lat.toast(u.banned_at ? "unbanned" : "banned");
+        closeDrawer(); loadUsers();
+      };
+      dr.querySelectorAll("[data-revoke]").forEach((b) => b.onclick = async () => {
+        await Lat.api(`/api/admin/keys/${b.dataset.revoke}/revoke`, { method: "POST" });
+        Lat.toast("key revoked");
+        closeDrawer(); loadUsers();
+      });
+      dr.classList.add("open");
+      $("backdrop").hidden = false;
+    }
+
+    function closeDrawer() { $("drawer").classList.remove("open"); $("backdrop").hidden = true; }
+    $("backdrop").onclick = closeDrawer;
+
+    (async () => {
+      const user = await Lat.renderNav();
+      if (!user || !user.is_admin) {
+        document.querySelector("main").innerHTML = `<section class="section" style="text-align:center;padding:4rem 1rem">
+          <h2>Admins only</h2><p class="dim">${user ? "This account isn't an admin." : 'You need to <a href="/auth" style="color:var(--accent)">sign in</a> first.'}</p>
+        </section>`;
+        return;
+      }
+      loadOverview(); loadUsers();
+    })();
+  </script>
+</body>
+</html>

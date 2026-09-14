@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lattice is a platform now | Lattice</title>
+  <meta name="description" content="Lattice has a proper home at lattice.mebbo.cloud: real accounts, self-serve API keys, an overhauled chat, and an OpenAI-compatible API for Quark and Spark." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../assets/favicon.png" />
+  <link rel="stylesheet" href="../app.css" />
+  <style>
+    .blog-page main { max-width: 860px; }
+    .back-link { display: inline-block; margin-bottom: 1.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .post h1 { margin-bottom: 0.4rem; }
+    .post .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-muted, #c2c2cc); margin: 1.25rem 0 2rem; }
+    .post h2 { margin-top: 2.75rem; }
+    .post p { line-height: 1.7; }
+    .post ul, .post ol { line-height: 1.7; padding-left: 1.4rem; }
+    .post a { color: var(--accent); }
+    .post-meta { margin-bottom: 0.5rem; }
+    .post code { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 0.15rem 0.4rem; font-size: 0.88em; }
+    .post pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; overflow-x: auto; line-height: 1.6; font-size: 0.88rem; }
+    .post pre code { background: none; border: none; padding: 0; }
+  </style>
+  <script src="../app.js"></script>
+</head>
+<body class="blog-page">
+  <script>document.write(Lat.header());</script>
+  <main>
+    <a href="index.html" class="back-link">← Back to Blog</a>
+    <article class="post">
+      <h1>Lattice is a platform now</h1>
+      <div class="post-meta">
+        <span class="cat">Releases</span>
+        <time datetime="2026-09-14">Sep 14, 2026</time>
+      </div>
+
+      <p class="lead">
+        Lattice has a proper home. The site has moved off Vercel and onto
+        lattice.mebbo.cloud, and it's no longer just a chat box bolted to a
+        landing page: there are real accounts, self-serve API keys, an
+        OpenAI-compatible API, and a chat that's actually pleasant to use.
+        Everything Quark and Spark can do, you can now wire into your own
+        stuff for free.
+      </p>
+
+      <h2>Why rebuild it</h2>
+      <p>
+        The old setup was a Vercel frontend with a hardcoded shared key
+        between it and the GPU server. Fine for a demo, but it meant nobody
+        could touch the API except the site's own chat, and "accounts" were
+        never going to happen on that stack. If people were going to
+        actually use these models in their own
+        little scripts, whatever - they needed their own keys, their own
+        limits, and a dashboard to see what they'd used. So the whole thing
+        got rebuilt properly.
+      </p>
+
+      <h2>What you get</h2>
+      <ul>
+        <li><strong>Real accounts.</strong> Sign up with an email, verify it, and you're in. No waitlist, no invite codes.</li>
+        <li><strong>Self-serve API keys.</strong> Create up to five keys from the dashboard, name them, revoke them yourself. Keys are shown once and stored hashed - lose one and you just make another.</li>
+        <li><strong>An OpenAI-compatible API.</strong> Point anything that takes a base URL and a key at <code>https://lattice.mebbo.cloud/v1</code> and pick <code>lattice-quark-1.5b</code> or <code>lattice-spark-1.5b</code>. Docs are at <a href="../docs.html">/docs</a>.</li>
+        <li><strong>A new chat.</strong> Model switching between Quark and Spark, chat history saved per browser, and you don't even need an account - guests get ten messages an hour to try things out. Signing up lifts the limits.</li>
+        <li><strong>A usage dashboard.</strong> Requests per day, characters generated, the lot. If you're burning through your daily limit you'll see exactly where it went.</li>
+      </ul>
+
+      <h2>How it's put together</h2>
+      <p>
+        The site is a Cloudflare Worker with a D1 database for accounts,
+        keys and usage. The models still run on the same Azure T4 VM as
+        before - the worker is just a smart front door: it checks your key,
+        counts your request, and forwards the prompt. Cold starts are still
+        a thing (the models unload when idle and take a minute to warm back
+        up), but the first request warms them for everyone.
+      </p>
+      <p>
+        Rate limits are simple: 20 requests a minute and 200 a day per API
+        key, 10 messages an hour for guests. Everything runs on one shared
+        GPU, so the limits are there to keep it fair, not to upsell you -
+        there's no paid tier and there isn't one planned.
+      </p>
+
+      <h2>What's next</h2>
+      <p>
+        The benchmarks and the rest of the blog all came over with the
+        move, and there's an <a href="../faq.html">FAQ</a> now for the questions
+        that kept landing in my inbox. Next up is real token streaming in
+        the API - right now <code>stream: true</code> is faked as a single
+        chunk, which works but isn't the real thing.
+      </p>
+      <p>
+        Go make a key and break something: <a href="../dashboard.html">the dashboard</a>
+        is waiting. Bugs and ideas to <a href="../contact.html">the contact page</a>,
+        as always.
+      </p>
+    </article>
+  <section class="section"><div class="panel" style="text-align:center;background:linear-gradient(135deg,rgba(139,92,246,.09),rgba(56,189,248,.05))"><h3 style="margin-top:0">Support Lattice</h3><p class="dim">Lattice runs on donations. If this post was useful, chip in on Ko-fi and help us train the next one.</p><a class="btn btn-primary" href="https://ko-fi.com/latticeai" target="_blank" rel="noopener">Support on Ko-fi</a></div></section></main>
+  <script>document.write(Lat.footer());</script>
+  <script>Lat.renderNav();</script>
+</body>
+</html>

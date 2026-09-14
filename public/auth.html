@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in - Lattice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="stylesheet" href="app.css" />
+  <script src="app.js"></script>
+  <script defer crossorigin="anonymous"
+    data-clerk-publishable-key="pk_live_Y2xlcmsubWViYm8uY2xvdWQk"
+    src="https://clerk.mebbo.cloud/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+</head>
+<body>
+  <script>document.write(Lat.header());</script>
+  <main style="display:flex;justify-content:center;align-items:flex-start;padding-top:2rem">
+    <div class="card" style="width:100%;max-width:420px">
+      <h2 style="margin:0 0 0.3rem;font-size:1.3rem" id="form-title">Welcome back</h2>
+      <p class="dim" style="margin:0 0 1.4rem;font-size:0.9rem" id="form-sub">Sign in to your Lattice account.</p>
+      <div id="clerk-mount" style="min-height:320px;display:flex;align-items:center;justify-content:center">
+        <p class="dim" id="clerk-loading">Loading sign-in…</p>
+      </div>
+      <p class="form-note" id="auth-switch"></p>
+    </div>
+  </main>
+  <script>document.write(Lat.footer());</script>
+  <script>
+    const mount = document.getElementById("clerk-mount");
+    const title = document.getElementById("form-title");
+    const sub = document.getElementById("form-sub");
+    const switchEl = document.getElementById("auth-switch");
+    const params = new URLSearchParams(location.search);
+    const next = params.get("next") || "/dashboard";
+    let mode = params.get("mode") === "signup" ? "signup" : "login";
+    let exchanging = false;
+
+    const appearance = {
+      variables: {
+        colorBackground: "#12121a",
+        colorText: "#e8e8ed",
+        colorTextSecondary: "#8b8b9e",
+        colorPrimary: "#6366f1",
+        colorInputBackground: "#171724",
+        colorInputText: "#e8e8ed",
+        colorNeutral: "#e8e8ed",
+        colorDanger: "#f87171",
+        borderRadius: "12px",
+        fontFamily: "Inter, sans-serif",
+      },
+      elements: {
+        card: { boxShadow: "none", border: "1px solid #1f1f2e", background: "transparent" },
+        footer: { display: "none" },
+      },
+    };
+
+    function setMode(m) {
+      mode = m;
+      title.textContent = m === "login" ? "Welcome back" : "Create your account";
+      sub.textContent = m === "login" ? "Sign in to your Lattice account." : "Free forever. Keys, chat history, higher limits.";
+      switchEl.innerHTML = m === "login"
+        ? 'Don\'t have an account? <a href="auth%3Fmode=signup.html">Create one</a>'
+        : 'Already have an account? <a href="auth.html">Sign in</a>';
+      renderClerk();
+    }
+
+    function renderClerk() {
+      if (!window.Clerk || !Clerk.loaded) return;
+      mount.innerHTML = "";
+      const el = document.createElement("div");
+      mount.appendChild(el);
+      if (mode === "login") {
+        Clerk.mountSignIn(el, { appearance, fallbackRedirectUrl: location.origin + "/auth", signUpUrl: "/auth?mode=signup" });
+      } else {
+        Clerk.mountSignUp(el, { appearance, fallbackRedirectUrl: location.origin + "/auth", signInUrl: "/auth" });
+      }
+    }
+
+    async function exchange(session) {
+      if (exchanging) return;
+      exchanging = true;
+      try {
+        const token = await session.getToken();
+        const res = await fetch("/api/auth/clerk", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { Lat.toast(data.error || "Sign-in failed", true); exchanging = false; return; }
+        location.href = next;
+      } catch (e) {
+        Lat.toast("Sign-in failed", true);
+        exchanging = false;
+      }
+    }
+
+    async function startAuth() {
+      const loading = document.getElementById("clerk-loading");
+      try {
+        const me = await Promise.race([Lat.me(), new Promise((resolve) => setTimeout(() => resolve(null), 2500))]);
+        if (me) { location.replace(next); return; }
+        if (!window.Clerk) throw new Error("auth library unavailable");
+        await Promise.race([Clerk.load(), new Promise((_, reject) => setTimeout(() => reject(new Error("auth timed out")), 12000))]);
+        setMode(mode);
+        if (Clerk.session) { exchange(Clerk.session); return; }
+        Clerk.addListener(({ session }) => { if (session) exchange(session); });
+      } catch (e) {
+        loading.textContent = "Sign-in couldn't load.";
+        const retry = document.createElement("button");
+        retry.className = "btn btn-primary";
+        retry.textContent = "Try again";
+        retry.onclick = () => location.reload();
+        mount.appendChild(retry);
+      }
+    }
+    if (document.readyState === "loading") window.addEventListener("DOMContentLoaded", startAuth, { once: true });
+    else startAuth();
+  </script>
+</body>
+</html>

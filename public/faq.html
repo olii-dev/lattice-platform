@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ - Lattice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="stylesheet" href="app.css" />
+  <script src="app.js"></script>
+  <style>
+    details { border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1.1rem; background: rgba(255,255,255,0.02); margin-bottom: 0.7rem; }
+    summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    details p { color: var(--muted); font-size: 0.92rem; margin: 0.7rem 0 0; }
+    details[open] { border-color: rgba(124,108,255,0.4); }
+  </style>
+</head>
+<body>
+  <script>document.write(Lat.header());</script>
+  <main style="max-width:740px">
+    <section style="padding-top:1rem">
+      <h2 style="font-size:1.8rem;letter-spacing:-0.02em;margin:0 0 1.4rem">FAQ</h2>
+
+      <details open><summary>What is Lattice?</summary>
+        <p>A research project building small language models in the open. The flagship is Quark, a 1.5B model pretrained and instruction tuned entirely from scratch - no borrowed weights. Spark is a Qwen2.5-1.5B identity fine-tune. Both are free to use here.</p>
+      </details>
+      <details><summary>Is it free?</summary>
+        <p>Yes. Accounts are free, API keys are free, web chat is free. There are rate limits (20 requests/minute, 200/day per key; 10 messages/hour for guests) because everything runs on one shared GPU. No paid tier exists.</p>
+      </details>
+      <details><summary>Do I need an account to chat?</summary>
+        <p>No - open the <a href="chat.html" style="color:var(--accent)">chat page</a> and go. Guests get 10 messages/hour per IP. A free account gets you higher limits, chat history, and API keys.</p>
+      </details>
+      <details><summary>How do I get an API key?</summary>
+        <p>Sign up, verify your email, then create a key in the <a href="dashboard.html" style="color:var(--accent)">dashboard</a>. It's shown once - save it. Full docs at <a href="docs.html" style="color:var(--accent)">/docs</a>.</p>
+      </details>
+      <details><summary>Why is the first message slow sometimes?</summary>
+        <p>The models unload from the GPU when idle. The first request after a break reloads them - can take a minute or two. After that, responses are fast.</p>
+      </details>
+      <details><summary>Can I trust what the models say?</summary>
+        <p>These are 1.5B-parameter models. They're surprisingly decent for their size but they will make things up with confidence. Don't use them where accuracy matters. Check the <a href="benchmarks/index.html" style="color:var(--accent)">benchmarks</a> for honest numbers.</p>
+      </details>
+      <details><summary>Where are the weights?</summary>
+        <p>On Hugging Face: <a href="https://huggingface.co/lattice-research/lattice-quark-1.5b" target="_blank" rel="noopener" style="color:var(--accent)">lattice-quark-1.5b</a> and <a href="https://huggingface.co/lattice-research/lattice-spark-1.5b" target="_blank" rel="noopener" style="color:var(--accent)">lattice-spark-1.5b</a>. There's also an MLX build of Quark for Apple silicon - see the <a href="blog/quark-mlx.html" style="color:var(--accent)">blog post</a>.</p>
+      </details>
+      <details><summary>Do you log my chats?</summary>
+        <p>The platform records aggregate usage (request counts, latency, model) for the dashboard and admin abuse controls. Guest chats aren't tied to an identity beyond IP rate limiting. Don't paste secrets into the chat - treat it like any public model.</p>
+      </details>
+      <details><summary>Something's broken or I want to say hi.</summary>
+        <p>Email <a href="mailto:oli@mebberson.com" style="color:var(--accent)">oli@mebberson.com</a> or use the <a href="contact.html" style="color:var(--accent)">contact page</a>.</p>
+      </details>
+    </section>
+  </main>
+  <script>document.write(Lat.footer());</script>
+  <script>Lat.renderNav();</script>
+</body>
+</html>
