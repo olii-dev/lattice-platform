@@ -65,6 +65,17 @@
     <section class="section"><div class="toolbar"><div><h3 style="margin:0">Top users</h3><p class="dim" style="margin:.25rem 0 0;font-size:.8rem">Click a user for model and source breakdowns.</p></div></div><div id="top-users" class="top-users" style="margin-top:1rem"></div></section>
 
     <section class="section">
+      <h3 style="margin:0 0 1rem;font-size:1.1rem">Guests <span class="dim" style="font-weight:400;font-size:.85rem" id="guests-count"></span></h3>
+      <div class="panel" style="padding:0.5rem 1rem">
+        <div class="table-scroll"><table class="tbl">
+          <thead><tr><th>Guest ID</th><th>Requests</th><th>Tokens</th><th>Errors</th><th>First seen</th><th>Last seen</th></tr></thead>
+          <tbody id="guests-body"><tr><td colspan="6" class="dim">Loading…</td></tr></tbody>
+        </table></div>
+      </div>
+      <p class="dim" style="font-size:.75rem;margin:.5rem 0 0">Guests are anonymous - each ID is a hash of their IP + browser, so the same visitor keeps the same ID. No raw IPs are stored.</p>
+    </section>
+
+    <section class="section">
       <h3 style="margin:0 0 1rem;font-size:1.1rem">All accounts</h3>
       <div class="panel" style="padding:0.5rem 1rem">
         <div class="table-scroll"><table class="tbl">
@@ -88,10 +99,12 @@
 
     function renderOverview() {
       if (!overview) return;
-      const { totals, series, signups, by_model, by_source, top_users } = overview;
+      const { totals, series, signups, by_model, by_source, top_users, guests } = overview;
       $("totals").innerHTML = [
         [totals.users, "users"],
         [totals.active_7d, "active · 7d"],
+        [totals.guests_today, "guests today"],
+        [totals.guests_range, "unique guests · selected"],
         [totals.keys_active, "active keys"],
         [totals.requests_today, "requests today"],
         [totals.requests_total, "requests all time"],
@@ -114,7 +127,9 @@
         color: (sourceMeta[s.source] || [, "#8b8b9e"])[1]
       })), { unit: metric === "tokens" ? " tokens" : " requests" });
       $("top-users").innerHTML = (top_users || []).map((u,i) => `<div class="user-card" data-user="${u.id}"><div class="rank">#${i+1}</div><strong>${Lat.esc(u.username || "Guest")}</strong><div class="dim" style="font-size:.75rem;overflow:hidden;text-overflow:ellipsis">${Lat.esc(u.email || "")}</div><div class="user-metrics"><span>${Lat.fmtNum(u.requests)} requests</span><span>${Lat.fmtNum(u.tokens)} tokens</span></div></div>`).join("") || '<p class="dim">No usage yet.</p>';
-      $("top-users").querySelectorAll('[data-user]').forEach(c => { if(c.dataset.user !== 'guest') c.onclick=()=>openUser(c.dataset.user); });
+      $("top-users").querySelectorAll('[data-user]').forEach(c => { if(c.dataset.user !== 'guest' && !c.dataset.user.startsWith('guest-')) c.onclick=()=>openUser(c.dataset.user); else c.style.cursor='default'; });
+      $("guests-count").textContent = guests && guests.length ? `\u00b7 ${guests.length} unique in this view` : "";
+      $("guests-body").innerHTML = (guests || []).map((g) => `<tr><td><span class="mono">${Lat.esc(g.id)}</span></td><td>${Lat.fmtNum(g.requests)}</td><td>${Lat.fmtNum(g.tokens)}</td><td>${Lat.fmtNum(g.errors || 0)}</td><td class="dim">${Lat.esc(g.first_day || "")}</td><td class="dim">${Lat.esc(g.last_day || "")}</td></tr>`).join("") || `<tr><td colspan="6" class="dim">No guest traffic in this view yet.</td></tr>`;
     }
 
     async function loadOverview() {

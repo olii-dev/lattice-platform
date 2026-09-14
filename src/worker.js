@@ -864,6 +864,19 @@ __name22222(handleMyUsage, "handleMyUsage");
 __name222222(handleMyUsage, "handleMyUsage");
 __name2222222(handleMyUsage, "handleMyUsage");
 __name22222222(handleMyUsage, "handleMyUsage");
+async function guestIdFor(request, ip) {
+  const ua = request.headers.get("User-Agent") || "unknown";
+  const hash = await sha256hex(`lattice-guest|${ip}|${ua}`);
+  return "guest-" + hash.slice(0, 10);
+}
+__name(guestIdFor, "guestIdFor");
+__name2(guestIdFor, "guestIdFor");
+__name22(guestIdFor, "guestIdFor");
+__name222(guestIdFor, "guestIdFor");
+__name2222(guestIdFor, "guestIdFor");
+__name22222(guestIdFor, "guestIdFor");
+__name222222(guestIdFor, "guestIdFor");
+__name2222222(guestIdFor, "guestIdFor");
 async function handleWebChat(request, env, user, ctx, ip) {
   const { message, history, model } = await request.json().catch(() => ({}));
   const text = String(message || "").trim();
@@ -884,6 +897,7 @@ async function handleWebChat(request, env, user, ctx, ip) {
     const hourCount = await bumpWindow(env, `gip:${ip}:h`, hourKey);
     if (hourCount > 10) return json({ error: "Guest limit reached (10 messages/hour) - sign up free to keep chatting", guest_limited: true }, 429);
   }
+  const guestId = user ? null : await guestIdFor(request, ip);
   const started = Date.now();
   let status = 200, reply = "", errMsg = null;
   try {
@@ -895,7 +909,7 @@ async function handleWebChat(request, env, user, ctx, ip) {
   }
   const wPromptTok = Math.ceil(text.length / 4), wCompTok = Math.ceil(reply.length / 4);
   ctx.waitUntil(recordUsage(env, {
-    userId: user ? user.id : "guest",
+    userId: user ? user.id : guestId,
     keyId: "",
     source: user ? "web" : "guest",
     model: modelId,
@@ -1104,14 +1118,17 @@ async function handleAdminOverview(env, url) {
   const todayRow = await bind(env.DB.prepare(`SELECT COALESCE(SUM(requests),0) req, COALESCE(SUM(errors),0) err, COALESCE(SUM(prompt_tokens),0) pin, COALESCE(SUM(completion_tokens),0) pout FROM usage_dims_daily WHERE day = ?${filter}`), today).first();
   const allRow = await bind(env.DB.prepare(`SELECT COALESCE(SUM(requests),0) req, COALESCE(SUM(errors),0) err, COALESCE(SUM(prompt_tokens),0) pin, COALESCE(SUM(completion_tokens),0) pout FROM usage_dims_daily WHERE day >= ?${filter}`), since).first();
   Object.assign(totals, { requests_today: todayRow?.req || 0, tokens_today: (todayRow?.pin || 0) + (todayRow?.pout || 0), requests_total: allRow?.req || 0, tokens_total: (allRow?.pin || 0) + (allRow?.pout || 0), input_tokens: allRow?.pin || 0, output_tokens: allRow?.pout || 0, errors: allRow?.err || 0 });
-  totals.active_7d = (await bind(env.DB.prepare(`SELECT COUNT(DISTINCT user_id) n FROM usage_dims_daily WHERE day >= ? AND user_id != 'guest'${filter}`), dayKey(new Date(Date.now() - 7 * 864e5))).first())?.n || 0;
+  totals.active_7d = (await bind(env.DB.prepare(`SELECT COUNT(DISTINCT user_id) n FROM usage_dims_daily WHERE day >= ? AND user_id != 'guest' AND user_id NOT LIKE 'guest-%'${filter}`), dayKey(new Date(Date.now() - 7 * 864e5))).first())?.n || 0;
+  totals.guests_today = (await bind(env.DB.prepare(`SELECT COUNT(DISTINCT user_id) n FROM usage_dims_daily WHERE day = ? AND user_id LIKE 'guest-%'${filter}`), today).first())?.n || 0;
+  totals.guests_range = (await bind(env.DB.prepare(`SELECT COUNT(DISTINCT user_id) n FROM usage_dims_daily WHERE day >= ? AND user_id LIKE 'guest-%'${filter}`), since).first())?.n || 0;
   const { results: series } = await bind(env.DB.prepare(`SELECT day, SUM(requests) requests, SUM(errors) errors, SUM(prompt_tokens) prompt_tokens, SUM(completion_tokens) completion_tokens FROM usage_dims_daily WHERE day >= ?${filter} GROUP BY day ORDER BY day`), since).all();
   const { results: signups } = await env.DB.prepare(`SELECT substr(created_at,1,10) day, COUNT(*) signups FROM users WHERE created_at >= ? GROUP BY day ORDER BY day`).bind(since).all();
   const { results: byModel } = await env.DB.prepare(`SELECT model, SUM(requests) requests, SUM(prompt_tokens)+SUM(completion_tokens) tokens FROM usage_dims_daily WHERE day >= ? GROUP BY model ORDER BY requests DESC`).bind(since).all();
   const { results: bySource } = await bind(env.DB.prepare(`SELECT source, SUM(requests) requests, SUM(prompt_tokens)+SUM(completion_tokens) tokens FROM usage_dims_daily WHERE day >= ?${filter} GROUP BY source ORDER BY requests DESC`), since).all();
-  const { results: topUsers } = await bind(env.DB.prepare(`SELECT COALESCE(u.id,'guest') id, COALESCE(u.email,'Guest traffic') email, COALESCE(u.username,'Guests') username, u.banned_at, u.last_active_at, SUM(d.requests) requests, SUM(d.prompt_tokens)+SUM(d.completion_tokens) tokens FROM usage_dims_daily d LEFT JOIN users u ON u.id=d.user_id WHERE d.day >= ?${filter} GROUP BY d.user_id ORDER BY tokens DESC LIMIT 12`), since).all();
+  const { results: topUsers } = await bind(env.DB.prepare(`SELECT COALESCE(u.id, d.user_id) id, COALESCE(u.email, CASE WHEN d.user_id LIKE 'guest-%' THEN 'hashed IP + browser' ELSE 'Guest traffic' END) email, COALESCE(u.username, CASE WHEN d.user_id LIKE 'guest-%' THEN d.user_id ELSE 'Guests' END) username, u.banned_at, u.last_active_at, SUM(d.requests) requests, SUM(d.prompt_tokens)+SUM(d.completion_tokens) tokens FROM usage_dims_daily d LEFT JOIN users u ON u.id=d.user_id WHERE d.day >= ?${filter} GROUP BY d.user_id ORDER BY tokens DESC LIMIT 12`), since).all();
+  const { results: guests } = await bind(env.DB.prepare(`SELECT d.user_id id, SUM(d.requests) requests, SUM(d.errors) errors, SUM(d.prompt_tokens)+SUM(d.completion_tokens) tokens, MIN(d.day) first_day, MAX(d.day) last_day FROM usage_dims_daily d WHERE d.day >= ? AND d.user_id LIKE 'guest-%'${filter} GROUP BY d.user_id ORDER BY tokens DESC LIMIT 100`), since).all();
   const { results: modelDaily } = await env.DB.prepare(`SELECT day, model, SUM(requests) requests, SUM(prompt_tokens)+SUM(completion_tokens) tokens FROM usage_dims_daily WHERE day >= ? GROUP BY day,model ORDER BY day`).bind(since).all();
-  return json({ model, range, totals, series, signups, by_model: byModel, by_source: bySource, top_users: topUsers, model_daily: modelDaily });
+  return json({ model, range, totals, series, signups, by_model: byModel, by_source: bySource, top_users: topUsers, guests, model_daily: modelDaily });
 }
 __name(handleAdminOverview, "handleAdminOverview");
 __name2(handleAdminOverview, "handleAdminOverview");
