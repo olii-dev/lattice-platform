@@ -1,0 +1,18 @@
+name = "lattice-platform"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lattice-platform-db"
+database_id = "87f73837-dce2-4e14-853c-3786e4d3c06c"
+migrations_dir = "migrations"
+
+routes = [{ pattern = "lattice.mebbo.cloud", custom_domain = true }]
+
+[vars]
+ENVIRONMENT = "production"
+ADMIN_EMAILS = "oli@mebberson.com,olimebb@gmail.com"
