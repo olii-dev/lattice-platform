@@ -1251,12 +1251,27 @@ __name222222(handleAdminRequests, "handleAdminRequests");
 __name2222222(handleAdminRequests, "handleAdminRequests");
 __name22222222(handleAdminRequests, "handleAdminRequests");
 async function handleStatus(env) {
+  let backend = null;
+  let backendError = null;
   try {
-    const data = await callBackend(env, "/health", null, { method: "GET", timeoutMs: 8e3 });
-    return json({ ok: true, backend: data });
+    backend = await callBackend(env, "/health", null, { method: "GET", timeoutMs: 8e3 });
   } catch (e) {
-    return json({ ok: false, error: "Models are warming up or offline" }, 200);
+    backendError = "Models are warming up or offline";
   }
+  let usage24h = null;
+  try {
+    const cutoff = new Date(Date.now() - 864e5).toISOString();
+    const row = await env.DB.prepare(
+      `SELECT COUNT(*) AS requests,
+              SUM(CASE WHEN status >= 400 THEN 1 ELSE 0 END) AS errors,
+              ROUND(AVG(latency_ms)) AS avg_latency_ms
+       FROM request_log WHERE ts >= ?`
+    ).bind(cutoff).first();
+    if (row) usage24h = { requests: row.requests || 0, errors: row.errors || 0, avg_latency_ms: row.avg_latency_ms || 0 };
+  } catch (e) {
+  }
+  if (!backend) return json({ ok: false, error: backendError, usage_24h: usage24h }, 200);
+  return json({ ok: true, backend, usage_24h: usage24h });
 }
 __name(handleStatus, "handleStatus");
 __name2(handleStatus, "handleStatus");

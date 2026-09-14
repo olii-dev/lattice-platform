@@ -130,7 +130,7 @@ window.Lat = (() => {
 
   function footer() {
     return `<footer class="footer">
-      <a href="/faq">FAQ</a> · <a href="/contact">Contact</a> · <a href="https://ko-fi.com/latticeai" target="_blank" rel="noopener">Fund the next model</a> ·
+      <a href="/faq">FAQ</a> · <a href="/status">Status</a> · <a href="/contact">Contact</a> · <a href="https://ko-fi.com/latticeai" target="_blank" rel="noopener">Fund the next model</a> ·
       Built by <a href="https://github.com/olii-dev" target="_blank" rel="noopener">oli</a> ·
       <a href="https://huggingface.co/lattice-research" target="_blank" rel="noopener">Hugging Face</a> ·
       <a href="https://github.com/olii-dev/lattice-site" target="_blank" rel="noopener">GitHub</a>
