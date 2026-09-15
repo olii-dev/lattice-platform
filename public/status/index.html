@@ -57,16 +57,12 @@
       <div class="overall" id="overall">
         <span class="dot warn" id="overall-dot"></span>
         <div>
-          <h2 id="overall-title">Scheduled maintenance</h2>
-          <p id="overall-sub">The model server is temporarily offline for planned maintenance. We are working to bring it back now.</p>
+          <h2 id="overall-title">Checking...</h2>
+          <p id="overall-sub">Talking to the live API.</p>
         </div>
       </div>
 
-      <div class="svc-grid" id="svc-grid">
-        <div class="svc"><div class="svc-top"><span class="svc-name">Site & API</span><span class="svc-state good"><span class="dot good"></span>Operational</span></div><p class="svc-note">The Lattice site remains available.</p></div>
-        <div class="svc"><div class="svc-top"><span class="svc-name">Quark 1.5B</span><span class="svc-state warn"><span class="dot warn"></span>Maintenance</span></div><p class="svc-note">Temporarily unavailable during scheduled GPU maintenance.</p></div>
-        <div class="svc"><div class="svc-top"><span class="svc-name">Spark 1.5B</span><span class="svc-state warn"><span class="dot warn"></span>Maintenance</span></div><p class="svc-note">Temporarily unavailable during scheduled GPU maintenance.</p></div>
-      </div>
+      <div class="svc-grid" id="svc-grid"></div>
 
       <h3 style="font-size:0.95rem;margin:0 0 0.7rem">Last 24 hours</h3>
       <div class="stat-row" id="stat-row"></div>
@@ -83,10 +79,96 @@
   <script>document.write(Lat.footer());</script>
   <script>Lat.renderNav();</script>
   <script>
-    document.getElementById("overall-dot").className = "dot warn";
-    document.getElementById("last-checked").textContent = "Maintenance in progress";
-    document.querySelector(".refresh-btn").hidden = true;
-    document.querySelector(".meta-line span:last-child").textContent = "updates will resume when service returns";
+    const MODELS = [
+      { id: "quark", name: "Quark 1.5B" },
+      { id: "spark", name: "Spark 1.5B" }
+    ];
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+    function svcCard(name, cls, state, note) {
+      return `<div class="svc">
+        <div class="svc-top">
+          <span class="svc-name">${esc(name)}</span>
+          <span class="svc-state ${cls}"><span class="dot ${cls}"></span>${esc(state)}</span>
+        </div>
+        <p class="svc-note">${esc(note)}</p>
+      </div>`;
+    }
+
+    function render(data, fetchError) {
+      const grid = document.getElementById("svc-grid");
+      const statRow = document.getElementById("stat-row");
+      const dot = document.getElementById("overall-dot");
+      const title = document.getElementById("overall-title");
+      const sub = document.getElementById("overall-sub");
+      const cards = [];
+
+      let overall = "good", overallTitle = "All systems operational", overallSub = "Site, API and both models are up.";
+
+      if (fetchError || !data) {
+        cards.push(svcCard("Site & API", "bad", "Down", "The status API did not respond. The site may be unreachable."));
+        for (const m of MODELS) cards.push(svcCard(m.name, "bad", "Unknown", "Can't check - the status API did not respond."));
+        overall = "bad"; overallTitle = "Major outage"; overallSub = "The API is not responding.";
+        statRow.innerHTML = "";
+      } else {
+        const loaded = (data.backend && data.backend.loaded) || [];
+        const backendUp = !!data.ok;
+        const usage = data.usage_24h;
+
+        cards.push(svcCard("Site & API", "good", "Operational", backendUp ? "Worker and inference backend are responding." : "Site and API are responding."));
+
+        let anyModelDown = false, anyStandby = false;
+        for (const m of MODELS) {
+          if (!backendUp) {
+            cards.push(svcCard(m.name, "warn", "Degraded", "The model server is warming up or offline. First request may fail or be slow."));
+            anyModelDown = true;
+          } else if (loaded.includes(m.id)) {
+            cards.push(svcCard(m.name, "good", "Operational", "Loaded on the GPU and serving."));
+          } else {
+            cards.push(svcCard(m.name, "warn", "Standby", "Not currently loaded - it reloads on the next request, which can take a minute or two."));
+            anyStandby = true;
+          }
+        }
+
+        if (!backendUp) {
+          overall = "warn"; overallTitle = "Models degraded"; overallSub = data.error || "The inference backend is warming up or offline.";
+        } else if (anyStandby) {
+          overall = "good"; overallTitle = "All systems operational"; overallSub = "Everything is up. Idle models warm up on first use.";
+        }
+
+        if (usage) {
+          const rate = usage.requests ? (usage.errors / usage.requests * 100) : 0;
+          const rateTxt = (rate < 0.05 && usage.errors > 0 ? "<0.1" : rate.toFixed(1)) + "%";
+          const lat = usage.avg_latency_ms >= 1000 ? (usage.avg_latency_ms / 1000).toFixed(1) + "s" : usage.avg_latency_ms + "ms";
+          statRow.innerHTML =
+            `<div class="stat"><div class="stat-v">${usage.requests.toLocaleString()}</div><div class="stat-l">requests</div></div>` +
+            `<div class="stat"><div class="stat-v">${usage.errors.toLocaleString()}</div><div class="stat-l">errors</div></div>` +
+            `<div class="stat"><div class="stat-v">${rateTxt}</div><div class="stat-l">error rate</div></div>` +
+            `<div class="stat"><div class="stat-v">${lat}</div><div class="stat-l">avg latency</div></div>`;
+        } else {
+          statRow.innerHTML = `<div class="stat"><div class="stat-v">-</div><div class="stat-l">usage data unavailable</div></div>`;
+        }
+      }
+
+      grid.innerHTML = cards.join("");
+      dot.className = "dot " + overall;
+      title.textContent = overallTitle;
+      sub.textContent = overallSub;
+      document.getElementById("last-checked").textContent = "Last checked: " + new Date().toLocaleTimeString();
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch("/api/status", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        render(await res.json(), null);
+      } catch (e) {
+        render(null, e);
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 60000);
   </script>
 </body>
 </html>
